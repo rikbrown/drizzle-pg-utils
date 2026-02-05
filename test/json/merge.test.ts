@@ -233,6 +233,47 @@ describe('JSON Merge Operations', () => {
     })
   })
 
+  describe('Raw SQL NULL Semantics', () => {
+    it('does not normalize SQL NULL on the left', () => {
+      const nullValue = sql`NULL::jsonb`
+      const obj = sql<{ a: string }>`${sql.raw(objAValueSql)}`
+
+      const result = jsonMerge(nullValue, obj)
+      const query = dialect.sqlToQuery(result)
+
+      expect(query.params).toEqual([])
+      expect(query.sql).toBe(
+        `coalesce(NULL::jsonb, 'null'::jsonb) || coalesce(${objAValueSql}, 'null'::jsonb)`,
+      )
+    })
+
+    it('does not normalize SQL NULL on the right', () => {
+      const obj = sql<{ a: string }>`${sql.raw(objAValueSql)}`
+      const nullValue = sql`NULL::jsonb`
+
+      const result = jsonMerge(obj, nullValue)
+      const query = dialect.sqlToQuery(result)
+
+      expect(query.params).toEqual([])
+      expect(query.sql).toBe(
+        `coalesce(${objAValueSql}, 'null'::jsonb) || coalesce(NULL::jsonb, 'null'::jsonb)`,
+      )
+    })
+
+    it('preserves SQL NULL on both sides', () => {
+      const nullValue1 = sql`NULL::jsonb`
+      const nullValue2 = sql`NULL::jsonb`
+
+      const result = jsonMerge(nullValue1, nullValue2)
+      const query = dialect.sqlToQuery(result)
+
+      expect(query.params).toEqual([])
+      expect(query.sql).toBe(
+        `coalesce(NULL::jsonb, 'null'::jsonb) || coalesce(NULL::jsonb, 'null'::jsonb)`,
+      )
+    })
+  })
+
   describe('Type Safety', () => {
     it('has correct return type for object merge', () => {
       const obj1 = sql<{ a: string }>`'{"a": "hello"}'::jsonb`

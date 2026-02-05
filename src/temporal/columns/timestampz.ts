@@ -68,7 +68,7 @@ export function createTimestampz(
  *
  * @warning This modifies the global Temporal.ZonedDateTime prototype and affects all instances.
  */
-export function registerZonedDateTimeJSONFix(
+export function registerZonedDateTimeToJSONFix(
   Temporal: typeof import('temporal-spec').Temporal,
 ) {
   // FIXME: IDK how to make toJSON not to output name of the timezone
@@ -78,3 +78,8 @@ export function registerZonedDateTimeJSONFix(
     return this.toString({ timeZoneName: 'never', offset: 'auto' })
   }
 }
+
+/**
+ * @deprecated Use `registerZonedDateTimeToJSONFix` instead.
+ */
+export const registerZonedDateTimeJSONFix = registerZonedDateTimeToJSONFix

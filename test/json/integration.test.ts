@@ -228,6 +228,18 @@ describe('JSON Integration Tests', () => {
       const result = await executeQuery(db, setter)
       expect(result).toEqual({ user: { name: 'Jane', age: 25 } })
     })
+
+    it('should allow setting SQL primitive values', async () => {
+      const baseValue = sql<{
+        user: { age: number }
+      }>`'{"user": {"age": 30}}'::jsonb`
+      const setter = jsonSet(baseValue)
+
+      const query = setter.user.age.$set(sql<number>`${42}`)
+      const result = await executeQuery(db, query)
+
+      expect(result).toEqual({ user: { age: 42 } })
+    })
   })
 
   describe('JSON Set $default Runtime Behavior', () => {
@@ -956,22 +968,12 @@ describe('JSON Integration Tests', () => {
       expect(nestedEmptyResult).toEqual({})
     })
 
-    it('should verify $value vs $path behavior difference', async () => {
+    it('should verify $value vs $text behavior difference', async () => {
       const testData = sql<{
         user: { name: string; count: number }
       }>`'{"user": {"name": "test", "count": 42}}'::jsonb`
 
-      // $path returns the actual JSON value
-      const nameViaPath = await executeQuery(
-        db,
-        jsonAccess(testData).user.name.$path,
-      )
-      const countViaPath = await executeQuery(
-        db,
-        jsonAccess(testData).user.count.$path,
-      )
-
-      // $value should extract as text (all return strings)
+      // $value returns the actual JSON value
       const nameViaValue = await executeQuery(
         db,
         jsonAccess(testData).user.name.$value,
@@ -981,13 +983,85 @@ describe('JSON Integration Tests', () => {
         jsonAccess(testData).user.count.$value,
       )
 
-      // $path preserves types
-      expect(nameViaPath).toEqual('test')
-      expect(countViaPath).toEqual(42)
+      // $text extracts as text (all return strings)
+      const nameViaText = await executeQuery(
+        db,
+        jsonAccess(testData).user.name.$text,
+      )
+      const countViaText = await executeQuery(
+        db,
+        jsonAccess(testData).user.count.$text,
+      )
 
-      // $value extracts as text
+      // $value preserves types
       expect(nameViaValue).toEqual('test')
-      expect(countViaValue).toEqual('42') // String, not number
+      expect(countViaValue).toEqual(42)
+      expect(typeof nameViaValue).toBe('string')
+      expect(typeof countViaValue).toBe('number')
+
+      // $text extracts as text
+      expect(nameViaText).toEqual('test')
+      expect(countViaText).toEqual('42') // String, not number
+      expect(typeof nameViaText).toBe('string')
+      expect(typeof countViaText).toBe('string')
+    })
+
+    it('should return correct JS types for $value with booleans and numbers', async () => {
+      const testData = sql<{
+        flags: { enabled: boolean; retries: number }
+      }>`'{"flags": {"enabled": true, "retries": 3}}'::jsonb`
+
+      const enabledViaValue = await executeQuery(
+        db,
+        jsonAccess(testData).flags.enabled.$value,
+      )
+      const retriesViaValue = await executeQuery(
+        db,
+        jsonAccess(testData).flags.retries.$value,
+      )
+
+      expect(enabledViaValue).toBe(true)
+      expect(retriesViaValue).toBe(3)
+      expect(typeof enabledViaValue).toBe('boolean')
+      expect(typeof retriesViaValue).toBe('number')
+    })
+
+    it('should return text types for $text with booleans and numbers', async () => {
+      const testData = sql<{
+        flags: { enabled: boolean; retries: number }
+      }>`'{"flags": {"enabled": true, "retries": 3}}'::jsonb`
+
+      const enabledViaText = await executeQuery(
+        db,
+        jsonAccess(testData).flags.enabled.$text,
+      )
+      const retriesViaText = await executeQuery(
+        db,
+        jsonAccess(testData).flags.retries.$text,
+      )
+
+      expect(enabledViaText).toBe('true')
+      expect(retriesViaText).toBe('3')
+      expect(typeof enabledViaText).toBe('string')
+      expect(typeof retriesViaText).toBe('string')
+    })
+
+    it('should show jsonb_extract_path_text returns text for numbers/booleans', async () => {
+      const testData = sql<{
+        count: number
+        active: boolean
+      }>`'{"count": 42, "active": true}'::jsonb`
+
+      const countText = await executeQuery(db, jsonAccess(testData).count.$text)
+      const activeText = await executeQuery(
+        db,
+        jsonAccess(testData).active.$text,
+      )
+
+      expect(countText).toBe('42')
+      expect(activeText).toBe('true')
+      expect(typeof countText).toBe('string')
+      expect(typeof activeText).toBe('string')
     })
   })
 

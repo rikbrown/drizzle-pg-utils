@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 describe('Temporal Polyfill', async () => {
-  const columns = await import('../../src/temporal/polyfill')
+  const columns = await import('../../src/temporal/polyfill.ts')
 
   it('should work', () => {
     expect(columns).toBeDefined()

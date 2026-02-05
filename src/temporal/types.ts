@@ -1,4 +1,4 @@
-import type { ColumnBaseConfig, ColumnDataType } from 'drizzle-orm'
+import type { ColumnBaseConfig, ColumnType } from 'drizzle-orm'
 import type {
   CheckBuilder,
   customType,
@@ -25,7 +25,7 @@ export type TemporalColumn<
 } & (T['constraints'] extends true
   ? {
       constraints: (
-        config: ExtraConfigColumn<ColumnBaseConfig<ColumnDataType>>,
+        config: ExtraConfigColumn<ColumnBaseConfig<ColumnType>>,
         name?: string,
       ) => CheckBuilder[]
     }

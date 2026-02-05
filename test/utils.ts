@@ -16,8 +16,8 @@ export const table = pgTable('test', {
 
 export const createDatabase = async () => {
   const { PGlite } = await import('@electric-sql/pglite')
-  const pglite = await PGlite.create({})
-  return drizzle(pglite)
+  const pglite = await PGlite.create()
+  return drizzle({ client: pglite })
 }
 
 export const executeQuery = async (

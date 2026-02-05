@@ -147,6 +147,17 @@ describe('JSON Array Operations', () => {
       )
     })
 
+    it('casts non-jsonb SQL values to jsonb', () => {
+      const sqlValue = sql<number>`${42}`
+      const result = jsonArraySet(numberArray, 1, sqlValue)
+      const query = dialect.sqlToQuery(result)
+
+      expect(query.params).toEqual([42])
+      expect(query.sql).toBe(
+        `jsonb_set(json_query(coalesce(${numberArraySql}, 'null'::jsonb), 'strict $ ? (@ != null)' default '[]'::jsonb on empty)::jsonb, '{1}', $1)`,
+      )
+    })
+
     it('handles negative indices correctly in SQL', () => {
       const result = jsonArraySet(numberArray, -1, 99)
       const query = dialect.sqlToQuery(result)

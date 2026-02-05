@@ -101,8 +101,8 @@ const jsonData = sql<UserProfile>`'{"user": {"id": 1, "name": "John", "profile":
 const accessor = json.access(jsonData)
 
 // Get the user's name
-const userName = accessor.user.name.$value  // Returns value as string (jsonb_extract_path_text, or '->> operator)
-const userPath = accessor.user.name.$path   // Returns value as jsonb (jsonb_extract_path, or '-> operator)
+const userName = accessor.user.name.$text   // Returns value as string (jsonb_extract_path_text, or '->> operator)
+const userValue = accessor.user.name.$value // Returns value as jsonb (jsonb_extract_path, or '-> operator)
 
 // Access deeply nested values
 const theme = accessor.user.profile.preferences.theme.$value
@@ -308,7 +308,7 @@ const withFallback = json.coalesce(
 
 // Coalesce specific properties
 const userName = json.coalesce(
-  json.access(users.profile).name.$path,
+  json.access(users.profile).name.$value,
   sql`'"Anonymous"'::jsonb`
 )
 
@@ -387,7 +387,7 @@ sql`jsonb_set(${users.profile}, '{tags}', (${users.profile} -> 'tags') || '"new-
 
 ```typescript
 // Type-safe access with IntelliSense
-json.access(users.profile).user.name.$path
+json.access(users.profile).user.name.$value
 json.access(users.profile).user.profile.preferences.theme.$value
 
 // Type-safe updates with validation
@@ -397,7 +397,7 @@ json.set(users.profile).user.name.$set('New Name')
 json.merge(users.profile, json.build.object({ lastLogin: '2024-01-01' }))
 
 // Type-safe array operations
-json.array.push(json.access(users.profile).tags.$path, 'new-tag')
+json.array.push(json.access(users.profile).tags.$value, 'new-tag')
 ```
 
 ### Benefits of Migration
@@ -418,8 +418,9 @@ Creates a type-safe accessor for navigating JSONB structures.
   - `source`: JSONB column or SQL expression
 - **Returns:** Proxy object with type-safe property access
 - **Properties:**
-  - `.$value`: Extract the value as `text` (using `jsonb_extract_path_text`, equivalent to `->>` operator)
-  - `.$path`: Extract the value as `jsonb` (using `jsonb_extract_path`, equivalent to `->` operator)
+  - `.$value`: Extract the value as `jsonb` (using `jsonb_extract_path`, equivalent to `#>` operator)
+  - `.$text`: Extract the value as `text` (using `jsonb_extract_path_text`, equivalent to `#>>` operator)
+  - `.$path`: Deprecated alias for `.$value`
 
 ### `json.set(source)`
 

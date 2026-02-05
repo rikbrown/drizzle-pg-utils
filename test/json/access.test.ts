@@ -139,6 +139,19 @@ describe('JSON Accessor', () => {
         SQLJSONAccess<SQL<JsonType['metadata']>>
       >()
     })
+
+    it('treats $value as json output and $text as text output', () => {
+      const accessor = jsonAccess(jsonObject)
+
+      expectTypeOf(accessor.user.id.$value).toEqualTypeOf<SQL<number>>()
+      expectTypeOf(
+        accessor.user.profile.preferences.notifications.$value,
+      ).toEqualTypeOf<SQL<boolean>>()
+      expectTypeOf(accessor.user.id.$text).toEqualTypeOf<SQL<string>>()
+      expectTypeOf(
+        accessor.user.profile.preferences.notifications.$text,
+      ).toEqualTypeOf<SQL<string>>()
+    })
   })
 
   describe('Edge Cases', () => {
@@ -219,7 +232,7 @@ describe('JSON Accessor', () => {
 
       expect(query.params).toEqual([])
       expect(query.sql).toBe(
-        `jsonb_extract_path_text(${jsonObjectSql}, 'user','name')`,
+        `jsonb_extract_path(${jsonObjectSql}, 'user','name')`,
       )
     })
 
@@ -230,7 +243,30 @@ describe('JSON Accessor', () => {
 
       expect(query.params).toEqual([])
       expect(query.sql).toBe(
-        `jsonb_extract_path_text(${jsonObjectSql}, 'user','profile','preferences','theme')`,
+        `jsonb_extract_path(${jsonObjectSql}, 'user','profile','preferences','theme')`,
+      )
+    })
+
+    it('generates correct SQL for $text access', () => {
+      const accessor = jsonAccess(jsonObject)
+      const nameText = accessor.user.name.$text
+      const query = dialect.sqlToQuery(nameText)
+
+      expect(query.params).toEqual([])
+      expect(query.sql).toBe(
+        `jsonb_extract_path_text(${jsonObjectSql}, 'user','name')`,
+      )
+    })
+
+    it('parameterizes path segments with special characters', () => {
+      const accessor = jsonAccess(jsonObject) as any
+      const key = "weird'key"
+      const keyValue = accessor[key].$value
+      const query = dialect.sqlToQuery(keyValue)
+
+      expect(query.params).toEqual([])
+      expect(query.sql).toBe(
+        `jsonb_extract_path(${jsonObjectSql}, 'weird''key')`,
       )
     })
   })
@@ -250,6 +286,15 @@ describe('JSON Accessor', () => {
       const accessor = jsonAccess(table.jsoncol)
       const someValue = accessor.some.$value
       const query = dialect.sqlToQuery(someValue)
+
+      expect(query.params).toEqual([])
+      expect(query.sql).toBe(`jsonb_extract_path("test"."jsoncol", 'some')`)
+    })
+
+    it('should handle $text access on table columns', () => {
+      const accessor = jsonAccess(table.jsoncol)
+      const someText = accessor.some.$text
+      const query = dialect.sqlToQuery(someText)
 
       expect(query.params).toEqual([])
       expect(query.sql).toBe(
