@@ -16,6 +16,9 @@
     "email": "ilchishin.denis@gmail.com",
     "url": "https://github.com/denny-il"
   },
+  "repository": {
+    "url": "https://github.com/denny-il/drizzle-pg-utils"
+  },
   "license": "MIT",
   "type": "module",
   "exports": {
