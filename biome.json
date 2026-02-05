@@ -6,9 +6,14 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!package.json", "!biome.json", "!.vscode"]
+    "includes": [
+      "**",
+      "!package.json",
+      "!biome.json",
+      "!.vscode",
+      "!tsconfig*.json"
+    ]
   },
-
   "assist": {
     "actions": {
       "source": {
