@@ -86,7 +86,7 @@
   },
   "scripts": {
     "test": "vitest run",
-    "build": "tsgo",
+    "build": "tsgo -p tsconfig.build.json",
     "check:type": "tsgo --noEmit",
     "check:lint": "biome lint .",
     "check:fmt": "biome format .",
