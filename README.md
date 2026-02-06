@@ -29,6 +29,54 @@ A TypeScript library providing type-safe utilities for working with PostgreSQL J
 npm install @denny-il/drizzle-pg-utils
 ```
 
+### Query Example (Select + Update)
+
+```typescript
+import { sql, eq } from 'drizzle-orm'
+import { jsonb, pgTable, serial, text } from 'drizzle-orm/pg-core'
+import json from '@denny-il/drizzle-pg-utils/json'
+
+type Profile = {
+  user: {
+    name: string
+    preferences?: { theme: 'light' | 'dark'; tags?: string[] }
+  }
+}
+
+const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull(),
+  profile: jsonb('profile').$type<Profile>().notNull(),
+})
+
+const profile = json.access(users.profile)
+
+const [row] = await db
+  .select({
+    id: users.id,
+    // This now works without having any runtime schemas, 
+    // and is fully type-safe
+    theme: profile.user.preferences.theme.$value,
+  })
+  .from(users)
+  .where(eq(profile.user.preferences.theme.$value, 'dark'))
+
+await db
+  .update(users)
+  .set({
+    // Update specific paths in JSONB column atomically in a single query,
+    // without merging the entire object in application code.
+    profile: json.setPipe(
+      users.profile,
+      // Set theme to 'dark'.
+      (s) => s.user.preferences.theme.$set('dark'),
+      // Set first value in tags array to 'intro'.
+      (s) => s.user.preferences.tags['0'].$set('intro'),
+    ),
+  })
+  .where(eq(users.id, row!.id))
+```
+
 ### JSON Utilities
 
 ```typescript
@@ -54,61 +102,6 @@ const events = pgTable('events', {
   createdAt: timestampz.column('created_at'),
 })
 ```
-
-## Query Examples
-
-### JSONB Queries (Select + Update)
-
-```typescript
-import { sql, eq } from 'drizzle-orm'
-import { jsonb, pgTable, serial, text } from 'drizzle-orm/pg-core'
-import json from '@denny-il/drizzle-pg-utils/json'
-
-type Profile = {
-  user: {
-    name: string
-    preferences?: { theme: 'light' | 'dark'; tags?: string[] }
-  }
-}
-
-const users = pgTable('users', {
-  id: serial('id').primaryKey(),
-  email: text('email').notNull(),
-  profile: jsonb('profile').$type<Profile>().notNull(),
-})
-
-const profile = json.access(users.profile)
-
-const [row] = await db
-  .select({
-    id: users.id,
-    theme: profile.user.preferences.theme.$value,
-  })
-  .from(users)
-  .where(eq(profile.user.preferences.theme.$value, 'dark'))
-
-await db
-  .update(users)
-  .set({
-    profile: json.setPipe(
-      users.profile,
-      (s) =>
-        s.user.preferences
-          .$default({ theme: 'light', tags: [] })
-          .theme.$set('dark'),
-      (s) => s.user.preferences.tags.$default([])['0'].$set('intro'),
-    ),
-  })
-  .where(sql`${users.id} = ${rows!.id}`)
-```
-
-## Installation
-
-```bash
-npm install @denny-il/drizzle-pg-utils
-```
-
-Each export is independently importable, allowing you to include only what you need in your bundle.
 
 ## Documentation
 
