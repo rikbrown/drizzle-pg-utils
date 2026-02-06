@@ -7,6 +7,7 @@ Type-safe utilities for working with PostgreSQL JSONB data in Drizzle ORM applic
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Installation & Imports](#installation--imports)
+- [Query Examples](#query-examples)
 - [Core Functions](#core-functions)
   - [JSON Accessor](#json-accessor)
   - [JSON Setter](#json-setter)
@@ -69,6 +70,72 @@ import json from '@denny-il/drizzle-pg-utils/json'
 import { json } from '@denny-il/drizzle-pg-utils'
 ```
 
+## Query Examples
+
+### Select + Update
+
+```typescript
+import { sql } from 'drizzle-orm'
+import { jsonb, pgTable, serial, text } from 'drizzle-orm/pg-core'
+import json from '@denny-il/drizzle-pg-utils/json'
+
+type Profile = {
+  user: {
+    name: string
+    preferences?: { theme: 'light' | 'dark'; tags?: string[] }
+  }
+  metadata?: { lastLogin?: string }
+}
+
+const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull(),
+  profile: jsonb('profile').$type<Profile>().notNull(),
+})
+
+const profile = json.access(users.profile)
+
+const rows = await db
+  .select({
+    id: users.id,
+    theme: profile.user.preferences.theme.$value,
+    tag0: profile.user.preferences.tags['0'].$value,
+  })
+  .from(users)
+  .where(sql`${profile.user.preferences.theme.$text} = 'dark'`)
+
+await db
+  .update(users)
+  .set({
+    profile: json.setPipe(
+      users.profile,
+      (s) =>
+        s.user.preferences
+          .$default({ theme: 'light', tags: [] })
+          .theme.$set('dark'),
+      (s) => s.user.preferences.tags.$default([])['0'].$set('intro'),
+      (s) => s.metadata.$default({}).lastLogin.$set('2024-01-01T00:00:00Z'),
+    ),
+  })
+  .where(sql`${users.id} = ${rows[0]!.id}`)
+```
+
+### Merge + Array Operations
+
+```typescript
+import { sql } from 'drizzle-orm'
+import json from '@denny-il/drizzle-pg-utils/json'
+
+const baseProfile = sql`'{"tags": ["beginner"], "status": "active"}'::jsonb`
+const overlay = sql`'{"tags": ["developer"], "lastLogin": "2024-01-01"}'::jsonb`
+
+const merged = json.merge(baseProfile, overlay)
+const withMoreTags = json.array.push(
+  json.access(merged).tags.$value,
+  'typescript',
+)
+```
+
 ## Core Functions
 
 ### JSON Accessor
@@ -101,8 +168,8 @@ const jsonData = sql<UserProfile>`'{"user": {"id": 1, "name": "John", "profile":
 const accessor = json.access(jsonData)
 
 // Get the user's name
-const userName = accessor.user.name.$text   // Returns value as string (jsonb_extract_path_text, or '->> operator)
-const userValue = accessor.user.name.$value // Returns value as jsonb (jsonb_extract_path, or '-> operator)
+const userName = accessor.user.name.$text   // Returns value as string (jsonb_extract_path_text, or '#>> operator)
+const userValue = accessor.user.name.$value // Returns value as jsonb (jsonb_extract_path, or '#> operator)
 
 // Access deeply nested values
 const theme = accessor.user.profile.preferences.theme.$value
@@ -210,7 +277,7 @@ const updated = jsonSetPipe(
   // Third update: set last login (operates on result of second update)
   (setter) => setter.lastLogin.$set('2023-12-01T10:00:00Z')
 )
-// Result: Complete UserProfile object with all updates applied sequentially
+// Result: Complete UserProfile object with all updates applied sequentially in one query
 
 // Use with database updates for complex multi-field changes
 await db
@@ -356,7 +423,7 @@ All JSON functions provide full TypeScript support:
 
 The JSON utilities target PostgreSQL 12+ and use standard functions:
 
-- **`jsonb_extract_path()` and `jsonb_extract_path_text()`** - For accessing nested properties (equivalent to `->` and `->>` operators)
+- **`jsonb_extract_path()` and `jsonb_extract_path_text()`** - For accessing nested properties (equivalent to `#>` and `#>>` operators)
 - **`jsonb_set()`** - For updating values at specific paths
 - **`||` operator** - For merging JSONB objects and arrays
 - **`jsonb_build_array()` and `jsonb_build_object()`** - For constructing new JSONB values

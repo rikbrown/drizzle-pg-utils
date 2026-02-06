@@ -55,41 +55,64 @@ const events = pgTable('events', {
 })
 ```
 
+## Query Examples
+
+### JSONB Queries (Select + Update)
+
+```typescript
+import { sql, eq } from 'drizzle-orm'
+import { jsonb, pgTable, serial, text } from 'drizzle-orm/pg-core'
+import json from '@denny-il/drizzle-pg-utils/json'
+
+type Profile = {
+  user: {
+    name: string
+    preferences?: { theme: 'light' | 'dark'; tags?: string[] }
+  }
+}
+
+const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull(),
+  profile: jsonb('profile').$type<Profile>().notNull(),
+})
+
+const profile = json.access(users.profile)
+
+const [row] = await db
+  .select({
+    id: users.id,
+    theme: profile.user.preferences.theme.$value,
+  })
+  .from(users)
+  .where(eq(profile.user.preferences.theme.$value, 'dark'))
+
+await db
+  .update(users)
+  .set({
+    profile: json.setPipe(
+      users.profile,
+      (s) =>
+        s.user.preferences
+          .$default({ theme: 'light', tags: [] })
+          .theme.$set('dark'),
+      (s) => s.user.preferences.tags.$default([])['0'].$set('intro'),
+    ),
+  })
+  .where(sql`${users.id} = ${rows!.id}`)
+```
+
 ## Installation
 
 ```bash
 npm install @denny-il/drizzle-pg-utils
-# or
-pnpm add @denny-il/drizzle-pg-utils
-# or
-yarn add @denny-il/drizzle-pg-utils
-```
-
-## Exports Structure
-
-This library provides modular exports for different functionality:
-
-```typescript
-// Main export - includes JSON utilities only
-import { json } from '@denny-il/drizzle-pg-utils'
-
-// JSON utilities only
-import { access, merge, array, setPipe } from '@denny-il/drizzle-pg-utils/json'
-// or
-import json from '@denny-il/drizzle-pg-utils/json'
-
-// Temporal utilities (globally registered Temporal)
-import * as temporal from '@denny-il/drizzle-pg-utils/temporal'
-
-// Temporal utilities (with polyfill)
-import * as temporal from '@denny-il/drizzle-pg-utils/temporal/polyfill'
 ```
 
 Each export is independently importable, allowing you to include only what you need in your bundle.
 
 ## Documentation
 
-- **[JSON Utilities](./doc/json.md)** - Complete guide to JSON/JSONB operations
+- **[JSON Utilities](./doc/json.md)** - Complete guide to JSON operations
 - **[Temporal Utilities](./doc/temporal.md)** - Working with PostgreSQL date/time types using Temporal API
 
 ## License

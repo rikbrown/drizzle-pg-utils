@@ -7,6 +7,7 @@ Work with PostgreSQL date/time types using the modern Temporal API.
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Installation & Setup](#installation--setup)
+- [Query Examples](#query-examples)
 - [Basic Column Types](#basic-column-types)
 - [Text-based Temporal Types](#text-based-temporal-types)
 - [Working with Temporal Values](#working-with-temporal-values)
@@ -120,6 +121,64 @@ import { _registerZonedDateTimeJSONFix } from '@denny-il/drizzle-pg-utils/tempor
 
 // Call once at application startup
 _registerZonedDateTimeJSONFix()
+```
+
+## Query Examples
+
+### Insert + Filter
+
+```typescript
+import { sql } from 'drizzle-orm'
+import { pgTable, serial } from 'drizzle-orm/pg-core'
+import { Temporal } from 'temporal-polyfill'
+import {
+  interval,
+  plainDate,
+  timestampz,
+} from '@denny-il/drizzle-pg-utils/temporal/polyfill'
+
+const events = pgTable('events', {
+  id: serial('id').primaryKey(),
+  scheduledDate: plainDate.column('scheduled_date'),
+  createdAt: timestampz.column('created_at'),
+  duration: interval.column('duration'),
+})
+
+const insertResult = await db
+  .insert(events)
+  .values({
+    scheduledDate: Temporal.PlainDate.from('2023-07-25'),
+    createdAt: Temporal.ZonedDateTime.from(
+      '2023-07-25T14:30:45[America/New_York]',
+    ),
+    duration: Temporal.Duration.from('PT2H30M'),
+  })
+  .returning({ id: events.id })
+
+const upcoming = await db
+  .select()
+  .from(events)
+  .where(sql`${events.scheduledDate} >= '2023-06-01'::date`)
+
+const inserted = await db
+  .select()
+  .from(events)
+  .where(sql`${events.id} = ${insertResult[0]!.id}`)
+```
+
+### SQL Expressions + Null Handling
+
+```typescript
+import { sql } from 'drizzle-orm'
+
+await db.execute(sql`NOW()::timestamp with time zone`)
+await db.execute(sql`(CURRENT_DATE + INTERVAL '1 day')::date`)
+
+const rows = await db.insert(events).values({}).returning()
+const record = await db
+  .select()
+  .from(events)
+  .where(sql`${events.id} = ${rows[0]!.id}`)
 ```
 
 ## Basic Column Types
