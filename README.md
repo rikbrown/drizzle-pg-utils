@@ -2,24 +2,6 @@
 
 A TypeScript library providing type-safe utilities for working with PostgreSQL JSONB data and Temporal types in Drizzle ORM applications.
 
-## Features
-
-### JSON Utilities
-- 🎯 **Type-safe JSONB operations** - Full TypeScript support with proper type inference
-- 🔍 **JSON accessor** - Navigate nested JSON structures with dot notation WITHOUT any runtime schema
-- ✏️ **JSON setter** - Update JSON values at specific paths with default value support for optional properties
-- 🔄 **JSON merge** - Merge JSON objects and arrays following PostgreSQL semantics
-- 📦 **Array operations** - Push, set, and delete array elements
-- 🛡️ **Null safety** - Proper handling of SQL NULL and JSON null values
-- ⚠️ **Compatibility** - Requires runtime with [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy#browser_compatibility) support
-
-### Temporal Utilities
-- ⏰ **[Temporal API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal) support** - Modern date/time API
-- 📅 **PostgreSQL integration** - Direct mapping between Temporal types and PostgreSQL date/time types
-- 🔧 **Custom column types** - Ready-to-use Drizzle column definitions
-- ✅ **Type safety** - Full TypeScript support for all temporal operations
-- 🛡️ **Format validation** - Built-in constraints for text-based temporal types
-- ⚠️ **Compatibility** - Two options available: globally available Temporal API or via [temporal-polyfill](https://github.com/fullcalendar/temporal-polyfill) package
 
 ## Quick Start
 
@@ -77,7 +59,16 @@ await db
   .where(eq(users.id, row!.id))
 ```
 
+## Features
+
 ### JSON Utilities
+- 🎯 **Type-safe JSONB operations** - Full TypeScript support with proper type inference
+- 🔍 **JSON accessor** - Navigate nested JSON structures with dot notation WITHOUT any runtime schema
+- ✏️ **JSON setter** - Update JSON values at specific paths with default value support for optional properties
+- 🔄 **JSON merge** - Merge JSON objects and arrays following PostgreSQL semantics
+- 📦 **Array operations** - Push, set, and delete array elements
+- 🛡️ **Null safety** - Proper handling of SQL NULL and JSON null values
+- ⚠️ **Compatibility** - Requires runtime with [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy#browser_compatibility) support
 
 ```typescript
 import json from '@denny-il/drizzle-pg-utils/json'
@@ -92,6 +83,12 @@ const updated = setter.user.name.$set('New Name')
 ```
 
 ### Temporal Utilities
+- ⏰ **[Temporal API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal) support** - Modern date/time API
+- 📅 **PostgreSQL integration** - Direct mapping between Temporal types and PostgreSQL date/time types
+- 🔧 **Custom column types** - Ready-to-use Drizzle column definitions
+- ✅ **Type safety** - Full TypeScript support for all temporal operations
+- 🛡️ **Format validation** - Built-in constraints for text-based temporal types
+- ⚠️ **Compatibility** - Two options available: globally available Temporal API or via [temporal-polyfill](https://github.com/fullcalendar/temporal-polyfill) package
 
 ```typescript
 import { timestamp, timestampz } from '@denny-il/drizzle-pg-utils/temporal'
