@@ -1,5 +1,7 @@
 # Drizzle PostgreSQL Utils
 
+>⫚ Forked from `@denny-il/drizzle-pg-utils` to remove dependencies on temporal-spec and temporal-polyfill, as they conflict with native Temporal types in TS6/7.
+
 A TypeScript library providing type-safe utilities for working with PostgreSQL JSONB data and Temporal types in Drizzle ORM applications.
 
 

@@ -1,7 +1,8 @@
 {
-  "name": "@denny-il/drizzle-pg-utils",
+  "name": "@rikdotcodes/drizzle-pg-utils",
   "description": "Set of utilities for Drizzle ORM and PostgreSQL",
-  "homepage": "https://github.com/denny-il/drizzle-pg-utils",
+  "version": "0.4.0-no-polyfill",
+  "homepage": "https://github.com/rikdotcodes/drizzle-pg-utils",
   "keywords": [
     "drizzle",
     "drizzle-orm",
@@ -41,11 +42,6 @@
       "import": "./src/temporal/global.ts",
       "module-sync": "./src/temporal/global.ts",
       "types": "./src/temporal/global.ts"
-    },
-    "./temporal/*": {
-      "import": "./src/temporal/polyfill/*.ts",
-      "module-sync": "./src/temporal/polyfill/*.ts",
-      "types": "./src/temporal/polyfill/*.ts"
     }
   },
   "publishConfig": {
@@ -69,11 +65,6 @@
         "import": "./dist/temporal/global.js",
         "module-sync": "./dist/temporal/global.js",
         "types": "./dist/temporal/global.d.ts"
-      },
-      "./temporal/*": {
-        "import": "./dist/temporal/polyfill/*.js",
-        "module-sync": "./dist/temporal/polyfill/*.js",
-        "types": "./dist/temporal/polyfill/*.d.ts"
       }
     }
   },
