@@ -1,6 +1,5 @@
 import { SQL } from 'drizzle-orm'
 import { customType, type IntervalConfig } from 'drizzle-orm/pg-core'
-import type { Temporal } from 'temporal-spec'
 import type { TemporalColumn } from '../types.ts'
 
 type Config = {
@@ -24,9 +23,7 @@ export type TemporalIntervalType = TemporalColumn<{
  * @param Temporal - The Temporal implementation to use
  * @returns Column factory function
  */
-export function createInterval(
-  Temporal: typeof import('temporal-spec').Temporal,
-): TemporalIntervalType {
+export function createInterval(): TemporalIntervalType {
   return {
     column: customType<Config>({
       dataType: (config?: IntervalConfig) =>

@@ -1,6 +1,5 @@
 import { SQL } from 'drizzle-orm'
 import { customType } from 'drizzle-orm/pg-core'
-import type { Temporal } from 'temporal-spec'
 import type { TemporalColumn } from '../types.ts'
 import type { TimeConfig } from './timestamp.ts'
 
@@ -22,9 +21,7 @@ export type TemporalTimeType = TemporalColumn<{
  * @param Temporal - The Temporal implementation to use
  * @returns Column factory function
  */
-export function createTime(
-  Temporal: typeof import('temporal-spec').Temporal,
-): TemporalTimeType {
+export function createTime(): TemporalTimeType {
   return {
     column: customType<Config>({
       dataType: (config?: TimeConfig) =>

@@ -1,7 +1,0 @@
-export * from './polyfill/interval.ts'
-export * from './polyfill/month-day.ts'
-export * from './polyfill/plain-date.ts'
-export * from './polyfill/time.ts'
-export * from './polyfill/timestamp.ts'
-export * from './polyfill/timestampz.ts'
-export * from './polyfill/year-month.ts'

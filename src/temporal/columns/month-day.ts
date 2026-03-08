@@ -1,6 +1,5 @@
 import { SQL, sql } from 'drizzle-orm'
 import { check, customType } from 'drizzle-orm/pg-core'
-import type { Temporal } from 'temporal-spec'
 import type { TemporalColumn } from '../types.ts'
 
 type Config = {
@@ -20,9 +19,7 @@ export type TemporalMonthDayType = TemporalColumn<{
  * @param Temporal - The Temporal implementation to use
  * @returns Column factory function
  */
-export function createMonthDay(
-  Temporal: typeof import('temporal-spec').Temporal,
-): TemporalMonthDayType {
+export function createMonthDay(): TemporalMonthDayType {
   return {
     column: customType<Config>({
       dataType: () => 'text',

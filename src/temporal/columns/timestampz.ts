@@ -1,6 +1,5 @@
 import { SQL } from 'drizzle-orm'
 import { customType } from 'drizzle-orm/pg-core'
-import type { Temporal } from 'temporal-spec'
 import type { TemporalColumn } from '../types.ts'
 import type { TimeConfig } from './timestamp.ts'
 
@@ -22,9 +21,7 @@ export type TemporalTimestampzType = TemporalColumn<{
  * @param Temporal - The Temporal implementation to use
  * @returns Column factory function
  */
-export function createTimestampz(
-  Temporal: typeof import('temporal-spec').Temporal,
-): TemporalTimestampzType {
+export function createTimestampz(): TemporalTimestampzType {
   return {
     column: customType<Config>({
       dataType: (config?: TimeConfig) =>
@@ -68,9 +65,7 @@ export function createTimestampz(
  *
  * @warning This modifies the global Temporal.ZonedDateTime prototype and affects all instances.
  */
-export function registerZonedDateTimeToJSONFix(
-  Temporal: typeof import('temporal-spec').Temporal,
-) {
+export function registerZonedDateTimeToJSONFix() {
   // FIXME: IDK how to make toJSON not to output name of the timezone
   Temporal.ZonedDateTime.prototype.toJSON = function (
     this: Temporal.ZonedDateTime,

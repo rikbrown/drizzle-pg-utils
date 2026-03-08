@@ -1,14 +1,11 @@
-/// <reference types="temporal-spec/global" />
 import {
   createTimestampz,
   registerZonedDateTimeJSONFix,
   type TemporalTimestampzType,
 } from '../columns/timestampz.ts'
 
-export const timestampz: TemporalTimestampzType = createTimestampz(
-  globalThis.Temporal,
-)
+export const timestampz: TemporalTimestampzType = createTimestampz()
 
 export function _registerZonedDateTimeJSONFix() {
-  return registerZonedDateTimeJSONFix(globalThis.Temporal)
+  return registerZonedDateTimeJSONFix()
 }
